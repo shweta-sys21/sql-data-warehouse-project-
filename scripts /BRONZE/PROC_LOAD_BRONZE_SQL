@@ -1,0 +1,139 @@
+/*-
+=============================================================================================================
+STORED PROCEDURE : LOAD BRONZE LAYER 
+=============================================================================================================
+CRIPT PURPOSE :
+         THIS STORED PROCEDURE LOADS DATA INTO 'BRONNZE' SCHEMA FROM EXTERNAL CSV FILES .
+         IT PERFORM THE FOLLOWING ACTION :
+          - TRUNCATE THE BRONZE LAYER BEFORE LOADING DATA 
+          - USES THE 'BULK INSERT ' COMMAND TO LOAD DATA FROM CSV FILES TO BRONZE TABLES.
+PARAMETERS : 
+        NONE.
+        THIS STORED PROCEDURE DOES NOT ACCEPT ANY PARAMETER OR RETURN ANY VALUES.
+
+USAGE EXAMPLE :
+EXEC BRONZE.LOAD_BRONZE
+
+===============================================================================================================
+/*
+
+CREATE OR ALTER PROCEDURE BRONZE.LOAD_BRONZE AS 
+BEGIN
+  
+  DECLARE @START_TIME DATETIME, @END_TIME DATETIME, @BATCH_START_TIME DATETIME ,@BATCH_END_TIME DATETIME 
+  BEGIN TRY 
+            SET @BATCH_START_TIME = GETDATE ()
+            PRINT '=========================='
+            PRINT 'LOADING BRONZE LAYER'
+            PRINT '=========================='
+
+
+            PRINT '----------------------------------------------'
+            PRINT ' LOADING CRM TABLES '
+            PRINT '----------------------------------------------'
+
+            SET @START_TIME = GETDATE ()
+
+            TRUNCATE TABLE BRONZE.CRM_CUST_INFO
+
+            PRINT '>> INSERTING DATA INTO : BRONZE.CRM_CUST_INFO '
+            BULK INSERT BRONZE.CRM_CUST_INFO 
+            FROM 'C:\SQL2025\DATAWAREHOUSE PPROJECT\sql-data-warehouse-project\datasets\source_crm\cust_info.csv'
+            WITH (
+                  FIRSTROW = 2,
+                  FIELDTERMINATOR =',',
+                  TABLOCK 
+                  )
+
+            SET @END_TIME = GETDATE ()
+            PRINT '>> LOAD DIURATION : '+ CAST (DATEDIFF ( SECOND , @START_TIME , @END_TIME ) AS NVARCHAR ) +'SECONDS'
+            PRINT '>> ----------------------------'
+
+            SET @START_TIME = GETDATE ()
+            PRINT '>> INSERTING DATA INTO : BRONZE.CRM_PRD_INFO'
+            BULK INSERT BRONZE.CRM_PRD_INFO 
+            FROM 'C:\SQL2025\DATAWAREHOUSE PPROJECT\sql-data-warehouse-project\datasets\source_crm\prd_info.csv'
+            WITH (
+                  FIRSTROW = 2,
+                  FIELDTERMINATOR =',',
+                  TABLOCK 
+                  )
+            SET @END_TIME = GETDATE ()
+            PRINT '>> LOAD DIURATION : '+ CAST (DATEDIFF ( SECOND , @START_TIME , @END_TIME ) AS NVARCHAR ) +'SECONDS'
+            PRINT '>> ----------------------------'
+           
+            SET @START_TIME = GETDATE ()
+            PRINT '>> INSERTING DATA INTO : BRONZE.CRM_SALES_DETAILS '
+            BULK INSERT BRONZE.CRM_SALES_DETAILS 
+            FROM 'C:\SQL2025\DATAWAREHOUSE PPROJECT\sql-data-warehouse-project\datasets\source_crm\sales_details.csv'
+            WITH (
+                  FIRSTROW = 2,
+                  FIELDTERMINATOR =',',
+                  TABLOCK 
+                  )
+            SET @END_TIME = GETDATE ()
+            PRINT '>> LOAD DIURATION : '+ CAST (DATEDIFF ( SECOND , @START_TIME , @END_TIME ) AS NVARCHAR ) +'SECONDS'
+            PRINT '>> ----------------------------'
+                
+            PRINT '----------------------------------------------'
+            PRINT ' LOADING ERP TABLES '
+            PRINT '----------------------------------------------'
+
+            SET @START_TIME = GETDATE ()    
+            PRINT '>> INSERTING DATA INTO : BRONZE.ERP_CUST_AZ12 '
+            BULK INSERT  BRONZE.ERP_CUST_AZ12
+            FROM 'C:\SQL2025\DATAWAREHOUSE PPROJECT\sql-data-warehouse-project\datasets\source_erp\CUST_AZ12.csv'
+            WITH (
+                  FIRSTROW = 2,
+                  FIELDTERMINATOR =',',
+                  TABLOCK 
+                  )
+            SET @END_TIME = GETDATE ()
+            PRINT '>> LOAD DIURATION : '+ CAST (DATEDIFF ( SECOND , @START_TIME , @END_TIME ) AS NVARCHAR ) +'SECONDS'
+            PRINT '>> ----------------------------'
+
+            SET @START_TIME = GETDATE ()
+            PRINT '>> INSERTING DATA INTO : BRONZE.ERP_LOC_A101 '
+            BULK INSERT  BRONZE.ERP_LOC_A101
+            FROM 'C:\SQL2025\DATAWAREHOUSE PPROJECT\sql-data-warehouse-project\datasets\source_erp\LOC_A101.csv'
+            WITH (
+                  FIRSTROW = 2,
+                  FIELDTERMINATOR =',',
+                  TABLOCK 
+                  )
+            SET @END_TIME = GETDATE ()
+            PRINT '>> LOAD DIURATION : '+ CAST (DATEDIFF ( SECOND , @START_TIME , @END_TIME ) AS NVARCHAR ) +'SECONDS'
+            PRINT '>> ----------------------------'
+
+            SET @START_TIME = GETDATE ()
+            PRINT '>> INSERTING DATA INTO : BRONZE.ERP_PX_CAT_G1V2 '
+            BULK INSERT  BRONZE.ERP_PX_CAT_G1V2
+            FROM 'C:\SQL2025\DATAWAREHOUSE PPROJECT\sql-data-warehouse-project\datasets\source_erp\PX_CAT_G1V2.csv'
+            WITH (
+                  FIRSTROW = 2,
+                  FIELDTERMINATOR =',',
+                  TABLOCK 
+                  )
+            SET @END_TIME = GETDATE ()
+            PRINT '>> LOAD DIURATION : '+ CAST (DATEDIFF ( SECOND , @START_TIME , @END_TIME ) AS NVARCHAR ) +'SECONDS'
+            PRINT '>> ----------------------------'
+
+            SET @BATCH_END_TIME = GETDATE ()
+            PRINT '===================================================================='
+            PRINT ' LOADING BRONZE LAYER IS COMPLETED'
+            PRINT '   - TOTAL LOAD DURATION ' + CAST( DATEDIFF(SECOND,@BATCH_START_TIME,@BATCH_END_TIME ) AS NVARCHAR ) + ' SECONDS'
+            PRINT '===================================================================='
+
+    END TRY 
+
+    BEGIN CATCH 
+      PRINT '========================================'
+      PRINT ' ERROR OCCURED DURING LOADING BRONZE LAYER '
+      PRINT 'ERROR MESSAGE ' + ERROR_MESSAGE()
+      PRINT 'ERROR MESSAGE' + CAST (ERROR_MESSAGE() AS NVARCHAR)
+      PRINT 'ERROR MESSAGE' + CAST (ERROR_STATE() AS NVARCHAR)
+      PRINT '========================================'
+    END CATCH 
+END 
+
+
